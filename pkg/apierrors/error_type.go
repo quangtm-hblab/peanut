@@ -11,9 +11,6 @@ const (
 	UniqueViolation
 	DatabaseError
 	InternalError
-
-	UsernameExisted
-	LoginFailed
 )
 
 var errorHTTPCode = map[ErrorType]int{
@@ -25,9 +22,6 @@ var errorHTTPCode = map[ErrorType]int{
 	UniqueViolation:        409,
 	DatabaseError:          500,
 	InternalError:          500,
-
-	UsernameExisted: 400,
-	LoginFailed:     400,
 }
 
 var errorCode = map[ErrorType]string{
@@ -39,9 +33,6 @@ var errorCode = map[ErrorType]string{
 	UniqueViolation:        "UNIQUE_VIOLATION",
 	DatabaseError:          "DATABASE_ERROR",
 	InternalError:          "INTERNAL_SERVER_ERROR",
-
-	UsernameExisted: "USERNAME_EXISTED",
-	LoginFailed:     "LOGIN_FAILED",
 }
 
 func (t ErrorType) HTTPCode() int {

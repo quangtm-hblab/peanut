@@ -1,14 +1,16 @@
 package usecase
 
 import (
-	"context"
-	"fmt"
 	"peanut/domain"
 	"peanut/repository"
 )
 
 type BookUsecase interface {
-	CreateBook(ctx context.Context, req domain.CreateBookReq) (domain.CreateBookResp, error)
+	GetBooks() ([]domain.Book, error)
+	GetBook(id int) (*domain.Book, error)
+	CreateBook(b domain.Book) (*domain.Book, error)
+	UpdateBook(updateForm domain.UpdateBookForm, ID int) (*domain.Book, error)
+	DeleteBook(id int) error
 }
 
 type bookUsecase struct {
@@ -21,25 +23,51 @@ func NewBookUsecase(r repository.BookRepo) BookUsecase {
 	}
 }
 
-func (uc *bookUsecase) CreateBook(ctx context.Context, req domain.CreateBookReq) (resp domain.CreateBookResp, err error) {
-	b := domain.Book{
-		Title:       req.Title,
-		Description: req.Description,
-		Author:      req.Author,
-	}
-
-	book, err := uc.BookRepo.CreateBook(b)
+func (uc *bookUsecase) GetBooks() (books []domain.Book, err error) {
+	books, err = uc.BookRepo.GetBooks()
 	if err != nil {
-		err = fmt.Errorf("[usecase.bookUsecase.CreateBook] failed: %w", err)
+		return nil, err
+	}
+	return
+}
+func (uc *bookUsecase) GetBook(id int) (book *domain.Book, err error) {
+	book, err = uc.BookRepo.GetBookById(id)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+func (uc *bookUsecase) CreateBook(b domain.Book) (book *domain.Book, err error) {
+	book, err = uc.BookRepo.CreateBook(b)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+func (uc *bookUsecase) UpdateBook(updateForm domain.UpdateBookForm, ID int) (book *domain.Book, err error) {
+	updatingBook, err := uc.BookRepo.GetBookById(ID)
+	if err != nil {
+		return nil, err
+	}
+	if updateForm.Name != nil {
+		updatingBook.Name = *updateForm.Name
+	}
+	if updateForm.Year != nil {
+		updatingBook.Year = *updateForm.Year
+	}
+	if updateForm.Price != nil {
+		updatingBook.Price = *updateForm.Price
+	}
+	book, err = uc.BookRepo.UpdateBook(*updatingBook, ID)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+func (uc *bookUsecase) DeleteBook(id int) (err error) {
+	err = uc.BookRepo.DeleteBook(id)
+	if err != nil {
 		return
 	}
-
-	resp = domain.CreateBookResp{
-		ID:          book.ID,
-		Title:       book.Title,
-		Description: book.Description,
-		Author:      book.Author,
-	}
-
 	return
 }

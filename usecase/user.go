@@ -2,89 +2,78 @@ package usecase
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 	"peanut/domain"
-	"peanut/pkg/apierrors"
 	"peanut/pkg/crypto"
-	"peanut/pkg/jwt"
+	jwtservices "peanut/pkg/jwt"
 	"peanut/repository"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type UserUsecase interface {
-	SignUp(ctx context.Context, sr domain.SignupReq) (domain.SignupResp, error)
-	Login(ctx context.Context, lr domain.LoginReq) (domain.LoginResp, error)
+	GetUsers(ctx context.Context) ([]domain.User, error)
+	GetUser(ctx context.Context, id int) (*domain.User, error)
+	CreateUser(u domain.User) error
+	Login(ctx *gin.Context, u domain.LoginForm) (string, *domain.ErrorResponse)
 }
 
 type userUsecase struct {
 	UserRepo repository.UserRepo
 }
 
-func NewUserUsecase(r repository.UserRepo) UserUsecase {
+func NewUserUsecase(db *gorm.DB) UserUsecase {
 	return &userUsecase{
-		UserRepo: r,
+		UserRepo: repository.NewUserRepo(db),
 	}
 }
 
-func (uc *userUsecase) SignUp(ctx context.Context, req domain.SignupReq) (resp domain.SignupResp, err error) {
-	// Check username existed
-	existed, err := uc.UserRepo.GetUserByUsername(req.Username)
-	if err != nil {
-		err = fmt.Errorf("[usecase.userUsecase.CreateUser] failed: %w", err)
-		return
-	}
-
-	if existed != nil {
-		err = apierrors.NewErrorf(apierrors.UsernameExisted, "Username existed")
-		return
-	}
-
-	// Create user
-	u := domain.User{
-		Username:    req.Username,
-		DisplayName: req.DisplayName,
-		Email:       req.Email,
-	}
-	u.Password = crypto.HashString(req.Password)
-	user, err := uc.UserRepo.CreateUser(u)
-	if err != nil {
-		err = fmt.Errorf("[usecase.userUsecase.CreateUser] failed: %w", err)
-		return
-	}
-
-	token, err := jwt.GenerateToken(user.ID)
-	if err != nil {
-		err = fmt.Errorf("[usecase.userUsecase.CreateUser] failed: %w", err)
-		return
-	}
-	resp.Token = token
-
+func (uc *userUsecase) GetUsers(ctx context.Context) (users []domain.User, err error) {
 	return
 }
 
-func (uc *userUsecase) Login(ctx context.Context, lr domain.LoginReq) (lrs domain.LoginResp, err error) {
-	user, err := uc.UserRepo.GetUserByUsername(lr.Username)
-	if err != nil {
-		err = fmt.Errorf("[usercase.userUsecase.Login] failed: %w", err)
-		return
-	}
-
-	if user == nil {
-		err = apierrors.NewErrorf(apierrors.LoginFailed, "username or password invalid")
-		return
-	}
-
-	if !crypto.DoMatch(user.Password, lr.Password) {
-		err = apierrors.NewErrorf(apierrors.LoginFailed, "username or password invalid")
-		return
-	}
-
-	token, err := jwt.GenerateToken(user.ID)
-	if err != nil {
-		err = fmt.Errorf("[usercase.userUsecase.Login] failed: %w", err)
-		return
-	}
-
-	lrs.Token = token
-
+func (uc *userUsecase) GetUser(ctx context.Context, id int) (user *domain.User, err error) {
 	return
+}
+
+func (uc *userUsecase) CreateUser(u domain.User) (err error) {
+	//hash password
+	u.Password, err = crypto.HashString(u.Password)
+	if err != nil {
+		return err
+	}
+	//create user
+	_, err = uc.UserRepo.CreateUser(u)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (uc *userUsecase) Login(ctx *gin.Context, u domain.LoginForm) (string, *domain.ErrorResponse) {
+	errRes := domain.ErrorResponse{}
+	//lookup user
+	user, err := uc.UserRepo.GetUserByUsername(u.Username)
+	if err != nil {
+		errRes = domain.ErrorResponse{Code: "400", ErrorDetails: nil, DebugMessage: "Incorrect username or password"}
+		return "", &errRes
+	}
+	//compare password
+	ok := crypto.DoMatch(user.Password, u.Password)
+	if !ok {
+		errRes = domain.ErrorResponse{Code: "400", ErrorDetails: nil, DebugMessage: "Incorrect username or password"}
+		return "", &errRes
+	}
+	//generate jwt token
+	tokenString, err := jwtservices.GenerateToken(user)
+	if err != nil {
+		errRes = domain.ErrorResponse{Code: "500", ErrorDetails: nil, DebugMessage: "Internal server error"}
+		return "", &errRes
+	}
+	//set cookie Authorization
+	ctx.SetSameSite(http.SameSiteLaxMode)
+	ctx.SetCookie("Authorization", tokenString, 3600*24*60, "", "", false, true)
+	//return
+	return tokenString, nil
 }

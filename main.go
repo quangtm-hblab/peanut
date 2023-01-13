@@ -15,12 +15,17 @@ import (
 //	@description	This is a sample server celler server.
 //	@termsOfService	http://swagger.io/terms/
 
-//	@host		localhost:8080
-//	@BasePath	/api
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
 
-// @securityDefinitions.apikey	Bearer
-// @in							header
-// @name						Authorization
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@host		localhost:8081
+//	@BasePath	/api/v1
+
+//	@securityDefinitions.basic	BasicAuth
 func main() {
 	fmt.Println("---- Hello world! ----")
 
@@ -29,14 +34,14 @@ func main() {
 	i18n.SetupI18n()
 
 	dbClient := dbConnect()
-	server := infra.SetupServer(dbClient)
 	infra.Migration(dbClient)
+	server := infra.SetupServer(dbClient)
 
-	server.Router.Run(":8080")
+	server.Router.Run(":8081")
 }
 
 func dbConnect() *gorm.DB {
-	db, err := infra.PostgresOpen()
+	db, err := infra.ConnectMySQL()
 	if err != nil {
 		log.Fatal("[main] DB connect error: ", err)
 	}

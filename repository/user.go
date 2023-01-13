@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"peanut/domain"
 
@@ -9,10 +9,10 @@ import (
 )
 
 type UserRepo interface {
-	GetUsers() ([]domain.User, error)
-	GetUser(id int) (*domain.User, error)
-	GetUserByUsername(username string) (*domain.User, error)
+	GetUsers(ctx context.Context) ([]domain.User, error)
+	GetUserById(ctx context.Context, id int) (*domain.User, error)
 	CreateUser(u domain.User) (*domain.User, error)
+	GetUserByUsername(username string) (*domain.User, error)
 }
 
 type userRepo struct {
@@ -23,27 +23,32 @@ func NewUserRepo(db *gorm.DB) UserRepo {
 	return &userRepo{DB: db}
 }
 
-func (r *userRepo) GetUsers() (users []domain.User, err error) {
+func (r *userRepo) GetUsers(ctx context.Context) (users []domain.User, err error) {
 	return
 }
 
-func (r *userRepo) GetUser(id int) (user *domain.User, err error) {
-	return
-}
+func (r *userRepo) GetUserById(ctx context.Context, id int) (user *domain.User, err error) {
+	result := r.DB.First(&user, "id=?", id)
 
-func (r *userRepo) GetUserByUsername(username string) (*domain.User, error) {
-	user := &domain.User{}
-	result := r.DB.Where("username = ?", username).First(user)
-
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
 	if result.Error != nil {
-		err := fmt.Errorf("[repo.User.GetUserByUsername] failed: %w", result.Error)
+		err = fmt.Errorf("[repo.User.GetUserById] failed: %w", result.Error)
 		return nil, err
 	}
+	return
+}
 
-	return user, nil
+func (r *userRepo) GetUserByUsername(username string) (user *domain.User, err error) {
+	result := r.DB.First(&user, "username=?", username)
+	if result.Error != nil {
+		err = fmt.Errorf("[repo.User.GetUserByUsername] failed: %w", result.Error)
+		return nil, err
+	}
+	fmt.Println(user)
+	if user.ID == 0 {
+		err = fmt.Errorf("Incorrect email or password")
+		return nil, err
+	}
+	return
 }
 
 func (r *userRepo) CreateUser(u domain.User) (user *domain.User, err error) {
