@@ -1,5 +1,4 @@
 .DS_Store
-
 tmp
-
-.env
+public
+.air.toml

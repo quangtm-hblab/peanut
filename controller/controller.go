@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"net/http"
+	"peanut/domain"
 	"peanut/pkg/apierrors"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +23,27 @@ func bindJSON(ctx *gin.Context, obj interface{}) bool {
 	ctx.Error(err).SetType(gin.ErrorTypeBind)
 
 	return false
+}
+
+func bindForm(ctx *gin.Context, obj interface{}) bool {
+	err := ctx.ShouldBind(obj)
+	// check required params
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, domain.Response{false, nil, err.Error()})
+		return false
+	}
+
+	// check if params is null/""
+	form, _ := ctx.MultipartForm()
+	values := form.Value
+
+	for _, value := range values {
+		if value[0] == "" {
+			ctx.JSON(http.StatusBadRequest, domain.Response{false, nil, "Required params shouldn't be null"})
+			return false
+		}
+	}
+	return true
 }
 
 func bindQueryParams(ctx *gin.Context, obj interface{}) bool {

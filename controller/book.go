@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"net/http"
 	"peanut/domain"
-	"peanut/pkg/response"
 	"peanut/repository"
 	"peanut/usecase"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -20,29 +21,70 @@ func NewBookController(db *gorm.DB) *BookController {
 	}
 }
 
-// CreateBook godoc
-//
-//	@Summary		Create book
-//	@Description	Create book
-//	@Tags			book
-//	@Accept			json
-//	@Produce		json
-//	@Param			param	body	domain.CreateBookReq	true	"Create book request"
-//	@Success		200	{object}	domain.Response{data=domain.CreateBookResp}
-//	@Failure		400	{object}	domain.ErrorResponse
-//	@Failure		500	{object}	domain.ErrorResponse
-//	@Security		Bearer
-//	@Router			/v1/books [post]
+func (c *BookController) GetBook(ctx *gin.Context) {
+	bookId := ctx.Param("id")
+	id, _ := strconv.Atoi(bookId)
+
+	book, err := c.Usecase.GetBook(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, domain.Response{false, nil, err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, domain.Response{true, book, "Found book successful"})
+}
+
+func (c *BookController) GetBooks(ctx *gin.Context) {
+	books, err := c.Usecase.GetBooks()
+	if err != nil {
+		ctx.JSON(http.StatusNoContent, gin.H{
+			"message": "not found any record",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, domain.Response{
+		Success: true, Data: books, Message: "Get data successful",
+	})
+
+}
+
 func (c *BookController) CreateBook(ctx *gin.Context) {
-	req := domain.CreateBookReq{}
-	if !bindJSON(ctx, &req) {
+	newbook := domain.Book{}
+	if !bindJSON(ctx, &newbook) {
 		return
 	}
 
-	resp, err := c.Usecase.CreateBook(ctx, req)
-	if checkError(ctx, err) {
+	book, err := c.Usecase.CreateBook(newbook)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, domain.Response{false, nil, err.Error()})
 		return
 	}
 
-	response.OK(ctx, resp)
+	ctx.JSON(http.StatusOK, domain.Response{true, book, "create book success"})
+}
+
+func (c *BookController) UpdateBook(ctx *gin.Context) {
+	bookId := ctx.Param("id")
+	id, _ := strconv.Atoi(bookId)
+	updateForm := domain.UpdateBookForm{}
+	if !bindJSON(ctx, &updateForm) {
+		return
+	}
+	newbook, err := c.Usecase.UpdateBook(updateForm, id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, domain.Response{false, nil, err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, domain.Response{true, newbook, "updated"})
+}
+
+func (c *BookController) DeleteBook(ctx *gin.Context) {
+	bookId := ctx.Param("id")
+	ID, _ := strconv.Atoi(bookId)
+	err := c.Usecase.DeleteBook(ID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, domain.Response{false, nil, err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, domain.Response{true, nil, "deleted"})
+
 }

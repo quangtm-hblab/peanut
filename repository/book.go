@@ -1,14 +1,17 @@
 package repository
 
 import (
-	"fmt"
 	"peanut/domain"
 
 	"gorm.io/gorm"
 )
 
 type BookRepo interface {
+	GetBooks() ([]domain.Book, error)
+	GetBookById(id int) (*domain.Book, error)
 	CreateBook(b domain.Book) (*domain.Book, error)
+	UpdateBook(updatingBook domain.Book, id int) (*domain.Book, error)
+	DeleteBook(id int) error
 }
 
 type bookRepo struct {
@@ -19,18 +22,51 @@ func NewBookRepo(db *gorm.DB) BookRepo {
 	return &bookRepo{DB: db}
 }
 
-func (r *bookRepo) CreateBook(b domain.Book) (book *domain.Book, err error) {
-	book = &domain.Book{
-		Title:       b.Title,
-		Description: b.Description,
-		Author:      b.Author,
-	}
-	result := r.DB.Create(book)
-
-	if result.Error != nil {
-		err = fmt.Errorf("[repo.Book.CreateBook] failed: %w", result.Error)
-		return nil, err
-	}
-
+func (r *bookRepo) GetBooks() (books []domain.Book, err error) {
+	r.DB.Find(&books)
 	return
+}
+
+func (r *bookRepo) GetBookById(id int) (book *domain.Book, err error) {
+	result := r.DB.First(&book, "id=?", id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return
+}
+
+func (r *bookRepo) CreateBook(b domain.Book) (book *domain.Book, err error) {
+	book = &domain.Book{Name: b.Name, Price: b.Price, Year: b.Year}
+	result := r.DB.Create(book)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return
+}
+
+func (r *bookRepo) UpdateBook(updatingBook domain.Book, id int) (*domain.Book, error) {
+	var book domain.Book
+	result := r.DB.Find(&book)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	book = updatingBook
+	saveResult := r.DB.Save(&book)
+	if saveResult.Error != nil {
+		return nil, saveResult.Error
+	}
+	return &book, nil
+}
+
+func (r *bookRepo) DeleteBook(id int) error {
+	var book domain.Book
+	result := r.DB.First(&book, "id=?", id)
+	if result.Error != nil {
+		return result.Error
+	}
+	deleteResult := r.DB.Delete(&book)
+	if deleteResult.Error != nil {
+		return deleteResult.Error
+	}
+	return nil
 }

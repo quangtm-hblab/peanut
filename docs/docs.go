@@ -11,199 +11,23 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
-        "contact": {},
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1/books": {
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Create book",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "book"
-                ],
-                "summary": "Create book",
-                "parameters": [
-                    {
-                        "description": "Create book request",
-                        "name": "param",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.CreateBookReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.CreateBookResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/users/login": {
-            "post": {
-                "description": "API Login",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "User Login",
-                "parameters": [
-                    {
-                        "description": "Login request",
-                        "name": "login_param",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.LoginReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.LoginReq"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/users/signup": {
-            "post": {
-                "description": "Sign Up",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "SignUp",
-                "parameters": [
-                    {
-                        "description": "Sign up request",
-                        "name": "param",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.SignupReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.SignupResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/users/{id}": {
+        "/contents": {
             "get": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Create an user",
+                "description": "content",
                 "consumes": [
                     "application/json"
                 ],
@@ -211,33 +35,128 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "Content"
                 ],
-                "summary": "Create an user",
+                "summary": "content",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Content"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "content",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Content"
+                ],
+                "summary": "content",
                 "parameters": [
+                    {
+                        "type": "file",
+                        "description": "file",
+                        "name": "Thumbnail",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "file",
+                        "name": "Media",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 30,
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "string",
+                        "name": "Name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "maxLength": 500,
+                        "minLength": 0,
+                        "type": "string",
+                        "description": "string",
+                        "name": "Description",
+                        "in": "formData",
+                        "required": true
+                    },
                     {
                         "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
+                        "description": "int",
+                        "name": "PlayTime",
+                        "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "int",
+                        "name": "Resolution",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "int",
+                        "name": "ARheight",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "int",
+                        "name": "ARwidth",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "boolean",
+                        "name": "Fever",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "boolean",
+                        "name": "Ondemand",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.User"
+                            "$ref": "#/definitions/domain.Content"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -253,38 +172,49 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "domain.CreateBookReq": {
+        "domain.Content": {
             "type": "object",
-            "required": [
-                "author",
-                "description",
-                "title"
-            ],
             "properties": {
-                "author": {
+                "arheight": {
+                    "type": "integer"
+                },
+                "arwidth": {
+                    "type": "integer"
+                },
+                "createdAt": {
                     "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "description": {
                     "type": "string"
                 },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.CreateBookResp": {
-            "type": "object",
-            "properties": {
-                "author": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
+                "fever": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "title": {
+                "media": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ondemand": {
+                    "type": "boolean"
+                },
+                "playtime": {
+                    "type": "integer"
+                },
+                "resolution": {
+                    "type": "integer"
+                },
+                "thumbnail": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -320,108 +250,22 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.LoginReq": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "username": {
-                    "type": "string",
-                    "x-order": "1",
-                    "example": "hungtran"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "thisispassword"
-                }
-            }
-        },
-        "domain.Response": {
+        "gorm.DeletedAt": {
             "type": "object",
             "properties": {
-                "data": {},
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.SignupReq": {
-            "type": "object",
-            "required": [
-                "display_name",
-                "email",
-                "password",
-                "username"
-            ],
-            "properties": {
-                "username": {
-                    "type": "string",
-                    "x-order": "1",
-                    "example": "hungtran"
-                },
-                "display_name": {
-                    "type": "string",
-                    "x-order": "2",
-                    "example": "Hung Tran"
-                },
-                "email": {
-                    "type": "string",
-                    "x-order": "3",
-                    "example": "hung@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "x-order": "4",
-                    "example": "thisispassword"
-                }
-            }
-        },
-        "domain.SignupResp": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3Jpem..."
-                }
-            }
-        },
-        "domain.User": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
+                "time": {
                     "type": "string"
                 },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "displayName": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
+                "valid": {
+                    "description": "Valid is true if Time is not NULL",
+                    "type": "boolean"
                 }
             }
         }
     },
     "securityDefinitions": {
-        "Bearer": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
+        "BasicAuth": {
+            "type": "basic"
         }
     }
 }`
@@ -429,8 +273,8 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
-	BasePath:         "/api",
+	Host:             "localhost:8081",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Swagger Example API",
 	Description:      "This is a sample server celler server.",

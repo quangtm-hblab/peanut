@@ -4,18 +4,16 @@ import (
 	"net/http"
 	"time"
 
-	"peanut/config"
 	"peanut/controller"
 	"peanut/middleware"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-
 	_ "peanut/docs"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm"
 )
 
 type Server struct {
@@ -23,9 +21,10 @@ type Server struct {
 	Store  *gorm.DB
 }
 
-func SetupServer(s *gorm.DB) Server {
+func SetupServer(store *gorm.DB) Server {
 	// Init router
 	r := gin.New()
+	r.MaxMultipartMemory = 8 << 20
 
 	// Global middleware
 	// Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release.
@@ -53,18 +52,41 @@ func SetupServer(s *gorm.DB) Server {
 	// Config route
 	v1 := r.Group("api/v1")
 	{
-		userCtrl := controller.NewUserController(s)
-		users := v1.Group("/users")
+		userCtrl := controller.NewUserController(store)
+		bookCrtl := controller.NewBookController(store)
+		contentCtrl := controller.NewContentController(store)
+		auth := v1.Group("/auth")
 		{
-			users.POST("/signup", userCtrl.SignUp)
-			users.POST("/login", userCtrl.Login)
+			auth.POST("/login", userCtrl.Login)
+			auth.POST("/signup", userCtrl.CreateUser)
+		}
+		users := v1.Group("/users")
+		users.Use(middleware.Authentication)
+		{
+			users.GET("", userCtrl.GetUsers)
+			users.POST("", userCtrl.CreateUser)
+			users.GET("/:id", userCtrl.GetUser)
+			// users.PATCH("/:id", userCtrl.UpdateUser)
+			// users.DELETE("/:id", userCtrl.DeleteUserByID)
 		}
 
-		bookCtrl := controller.NewBookController(s)
 		books := v1.Group("/books")
+		books.Use(middleware.Authentication)
 		{
-			books.Use(middleware.JwtAuth()).POST("", bookCtrl.CreateBook)
+			books.GET("", bookCrtl.GetBooks)
+			books.POST("", bookCrtl.CreateBook)
+			books.GET("/:id", bookCrtl.GetBook)
+			books.PUT("/:id", bookCrtl.UpdateBook)
+			books.DELETE("/:id", bookCrtl.DeleteBook)
 		}
+
+		contents := v1.Group("/contents")
+		contents.Use(middleware.Authentication)
+		{
+			contents.GET("", contentCtrl.GetContents)
+			contents.POST("", contentCtrl.CreateContent)
+		}
+
 	}
 
 	// health check
@@ -72,12 +94,10 @@ func SetupServer(s *gorm.DB) Server {
 		c.Status(http.StatusOK)
 	})
 
-	if config.IsDevelopment() {
-		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return Server{
-		Store:  s,
+		Store:  store,
 		Router: r,
 	}
 }

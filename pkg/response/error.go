@@ -2,7 +2,7 @@ package response
 
 import (
 	"errors"
-	"peanut/config"
+	"fmt"
 	"peanut/domain"
 	"peanut/pkg/apierrors"
 	"peanut/pkg/i18n"
@@ -26,17 +26,15 @@ func Error(ctx *gin.Context, err error) {
 }
 
 func errorDetails(err error, locale string) (details []domain.ErrorDetail) {
-	// Set default locale
-	if locale == "" {
-		locale = config.Locale
-	}
 	var vErrs validator.ValidationErrors
 	if errors.As(err, &vErrs) {
+		fmt.Println("locale: ", locale)
 		trans := i18n.GetTrans(locale)
 		for _, err := range vErrs {
 			details = append(details, domain.ErrorDetail{
-				Field:        err.Field(),
-				ErrorCode:    err.Tag(),
+				Field:     err.Field(),
+				ErrorCode: err.Tag(),
+				// ErrorMessage: err.Error(),
 				ErrorMessage: err.Translate(trans),
 			})
 		}

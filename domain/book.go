@@ -1,21 +1,16 @@
 package domain
 
+import "gorm.io/gorm"
+
 type Book struct {
-	BaseModel
-	Title       string
-	Description string
-	Author      string
+	gorm.Model
+	Name  string  `json:"name" binding:"required" gorm:"unique"`
+	Year  int     `json:"year" binding:"required"`
+	Price float64 `json:"price" binding:"required"`
 }
 
-type CreateBookReq struct {
-	Title       string `json:"title" binding:"required"`
-	Description string `json:"description" binding:"required"`
-	Author      string `json:"author" binding:"required"`
-}
-
-type CreateBookResp struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Author      string `json:"author"`
+type UpdateBookForm struct {
+	Name  *string
+	Year  *int
+	Price *float64
 }

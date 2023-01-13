@@ -1,27 +1,34 @@
-basePath: /api
+basePath: /api/v1
 definitions:
-  domain.CreateBookReq:
+  domain.Content:
     properties:
-      author:
+      arheight:
+        type: integer
+      arwidth:
+        type: integer
+      createdAt:
         type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
       description:
         type: string
-      title:
-        type: string
-    required:
-    - author
-    - description
-    - title
-    type: object
-  domain.CreateBookResp:
-    properties:
-      author:
-        type: string
-      description:
-        type: string
+      fever:
+        type: boolean
       id:
         type: integer
-      title:
+      media:
+        type: string
+      name:
+        type: string
+      ondemand:
+        type: boolean
+      playtime:
+        type: integer
+      resolution:
+        type: integer
+      thumbnail:
+        type: string
+      updatedAt:
         type: string
     type: object
   domain.ErrorDetail:
@@ -44,213 +51,117 @@ definitions:
           $ref: '#/definitions/domain.ErrorDetail'
         type: array
     type: object
-  domain.LoginReq:
+  gorm.DeletedAt:
     properties:
-      password:
-        example: thisispassword
+      time:
         type: string
-      username:
-        example: hungtran
-        type: string
-        x-order: "1"
-    required:
-    - password
-    - username
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
     type: object
-  domain.Response:
-    properties:
-      data: {}
-      message:
-        type: string
-    type: object
-  domain.SignupReq:
-    properties:
-      display_name:
-        example: Hung Tran
-        type: string
-        x-order: "2"
-      email:
-        example: hung@example.com
-        type: string
-        x-order: "3"
-      password:
-        example: thisispassword
-        type: string
-        x-order: "4"
-      username:
-        example: hungtran
-        type: string
-        x-order: "1"
-    required:
-    - display_name
-    - email
-    - password
-    - username
-    type: object
-  domain.SignupResp:
-    properties:
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3Jpem...
-        type: string
-    type: object
-  domain.User:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
-      displayName:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      password:
-        type: string
-      updatedAt:
-        type: string
-      username:
-        type: string
-    type: object
-host: localhost:8080
+host: localhost:8081
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
   description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: Swagger Example API
   version: "1.0"
 paths:
-  /v1/books:
-    post:
-      consumes:
-      - application/json
-      description: Create book
-      parameters:
-      - description: Create book request
-        in: body
-        name: param
-        required: true
-        schema:
-          $ref: '#/definitions/domain.CreateBookReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.CreateBookResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Create book
-      tags:
-      - book
-  /v1/users/{id}:
+  /contents:
     get:
       consumes:
       - application/json
-      description: Create an user
+      description: content
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Content'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: content
+      tags:
+      - Content
+    post:
+      consumes:
+      - application/json
+      description: content
       parameters:
-      - description: User ID
-        in: path
-        name: id
+      - description: file
+        in: formData
+        name: Thumbnail
+        required: true
+        type: file
+      - description: file
+        in: formData
+        name: Media
+        required: true
+        type: file
+      - description: string
+        in: formData
+        maxLength: 30
+        minLength: 1
+        name: Name
+        required: true
+        type: string
+      - description: string
+        in: formData
+        maxLength: 500
+        minLength: 0
+        name: Description
+        required: true
+        type: string
+      - description: int
+        in: formData
+        name: PlayTime
         required: true
         type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/domain.User'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - Bearer: []
-      summary: Create an user
-      tags:
-      - user
-  /v1/users/login:
-    post:
-      consumes:
-      - application/json
-      description: API Login
-      parameters:
-      - description: Login request
-        in: body
-        name: login_param
+      - description: int
+        in: formData
+        name: Resolution
         required: true
-        schema:
-          $ref: '#/definitions/domain.LoginReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.LoginReq'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: User Login
-      tags:
-      - user
-  /v1/users/signup:
-    post:
-      consumes:
-      - application/json
-      description: Sign Up
-      parameters:
-      - description: Sign up request
-        in: body
-        name: param
+        type: integer
+      - description: int
+        in: formData
+        name: ARheight
         required: true
-        schema:
-          $ref: '#/definitions/domain.SignupReq'
+        type: integer
+      - description: int
+        in: formData
+        name: ARwidth
+        required: true
+        type: integer
+      - description: boolean
+        in: formData
+        name: Fever
+        type: boolean
+      - description: boolean
+        in: formData
+        name: Ondemand
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/domain.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.SignupResp'
-              type: object
+            $ref: '#/definitions/domain.Content'
         "400":
           description: Bad Request
           schema:
@@ -259,12 +170,10 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
-      summary: SignUp
+      summary: content
       tags:
-      - user
+      - Content
 securityDefinitions:
-  Bearer:
-    in: header
-    name: Authorization
-    type: apiKey
+  BasicAuth:
+    type: basic
 swagger: "2.0"
